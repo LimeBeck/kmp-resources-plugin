@@ -1,0 +1,14 @@
+[versions]
+kotlin = "2.3.0"
+
+[libraries]
+kotlinpoet = { module = "com.squareup:kotlinpoet", version = "2.2.0" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+
+kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+versions = { id = "com.github.ben-manes.versions", version = "0.53.0" }
+pluginPublish = { id = "com.gradle.plugin-publish", version = "2.0.0" }
