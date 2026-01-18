@@ -70,11 +70,12 @@ class KmpResourcesPluginTest {
         """.trimIndent()
         )
 
-        val result = gradleRunner.withArguments("generateKmpResources", "--stacktrace").build()
-        assertEquals(TaskOutcome.SUCCESS, result.task(":generateKmpResources")!!.outcome)
+        val result = gradleRunner.withArguments("generateKmpResourcesMetadata", "generateKmpResourcesLinuxX64", "--stacktrace").build()
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateKmpResourcesMetadata")!!.outcome)
+        assertEquals(TaskOutcome.SUCCESS, result.task(":generateKmpResourcesLinuxX64")!!.outcome)
         
         // Check commonMain generated code
-        val commonGeneratedFile = testProjectDir.resolve("build/generated/kmpResources/commonMain/kotlin/dev/limebeck/res/Res.kt")
+        val commonGeneratedFile = testProjectDir.resolve("build/generated/kmpResources/metadata/dev/limebeck/res/Res.kt")
         assertTrue(commonGeneratedFile.exists())
         val commonContent = commonGeneratedFile.readText()
         assertTrue(commonContent.contains("expect object Res : ResourceDirectory"))
@@ -125,7 +126,7 @@ class KmpResourcesPluginTest {
 
 
         // Check linuxX64Main generated code
-        val linuxGeneratedFile = testProjectDir.resolve("build/generated/kmpResources/linuxX64Main/kotlin/dev/limebeck/res/Res.kt")
+        val linuxGeneratedFile = testProjectDir.resolve("build/generated/kmpResources/linuxX64/dev/limebeck/res/Res.kt")
         assertTrue(linuxGeneratedFile.exists())
         val linuxContent = linuxGeneratedFile.readText()
         assertTrue(linuxContent.contains("actual object Res : ResourceDirectory"))

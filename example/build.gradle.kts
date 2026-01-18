@@ -10,6 +10,10 @@ repositories {
 kotlin {
     jvm()
     linuxX64()
+
+    sourceSets.commonMain.dependencies {
+        implementation(kotlin("test"))
+    }
 }
 
 kmpResources {
