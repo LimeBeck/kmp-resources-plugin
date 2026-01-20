@@ -129,10 +129,11 @@ class KmpResourcesPluginTest {
         val linuxGeneratedFile = testProjectDir.resolve("build/generated/kmpResources/linuxX64/dev/limebeck/res/Res.kt")
         assertTrue(linuxGeneratedFile.exists())
         val linuxContent = linuxGeneratedFile.readText()
+        println(linuxContent)
         assertTrue(linuxContent.contains("actual object Res : ResourceDirectory"))
         assertTrue(linuxContent.contains("actual object images : ResourceDirectory"))
         assertTrue(linuxContent.contains("actual val logo: ResourceFile"))
-        assertTrue(linuxContent.contains("actual val linux_only: ResourceFile"))
+        assertTrue(linuxContent.contains("public val linux_only: ResourceFile"))
         
         // Logo in linux should be overriden (linux-logo base64)
         // "linux-logo" in base64 is "bGludXgtbG9nbw=="
@@ -177,7 +178,7 @@ class KmpResourcesPluginTest {
                   override fun readBytes(): ByteArray = Base64.Default.decode("bGludXgtbG9nbw==")
                 }
 
-                public actual val linux_only: ResourceFile = object : ResourceFile {
+                public val linux_only: ResourceFile = object : ResourceFile {
                   override val name: String = "linux_only.txt"
 
                   override val size: Long = 10
@@ -192,5 +193,63 @@ class KmpResourcesPluginTest {
             
         """.trimIndent()
         assertEquals(expectedLinux, linuxContent, "Generated linux code differs from expected")
+    }
+
+    @Test
+    fun `Check task dependencies`() {
+        initGradleBuild(
+            """
+            plugins {
+                kotlin("multiplatform") version "2.1.0"
+                id("dev.limebeck.kmp-resources")
+            }
+            
+            kotlin {
+                jvm()
+                linuxX64()
+            }
+            
+            kmpResources {
+                packageName.set("dev.limebeck.res")
+            }
+
+            tasks.register("checkDependencies") {
+                doLast {
+                    val jvmProcessResources = tasks.findByName("jvmProcessResources")
+                    val linuxX64ProcessResources = tasks.findByName("linuxX64ProcessResources")
+                    
+                    if (jvmProcessResources != null) {
+                        val jvmDeps = jvmProcessResources.taskDependencies.getDependencies(jvmProcessResources).map { it.name }
+                        println("JVM_DEPS: " + jvmDeps.sorted().joinToString(","))
+                    }
+                    if (linuxX64ProcessResources != null) {
+                        val linuxDeps = linuxX64ProcessResources.taskDependencies.getDependencies(linuxX64ProcessResources).map { it.name }
+                        println("LINUX_DEPS: " + linuxDeps.sorted().joinToString(","))
+                    }
+
+                    val generateJvm = tasks.findByName("generateKmpResourcesJvm")
+                    if (generateJvm != null) {
+                        val generateJvmDeps = generateJvm.taskDependencies.getDependencies(generateJvm).map { it.name }
+                        println("GENERATE_JVM_DEPS: " + generateJvmDeps.sorted().joinToString(","))
+                    }
+                }
+            }
+        """.trimIndent()
+        )
+
+        val result = gradleRunner.withArguments("checkDependencies", "-q").build()
+        val output = result.output
+        
+        val jvmDeps = output.lineSequence().find { it.contains("JVM_DEPS: ") }?.substringAfter("JVM_DEPS: ")?.split(",")?.map { it.trim() } ?: emptyList()
+        val linuxDeps = output.lineSequence().find { it.contains("LINUX_DEPS: ") }?.substringAfter("LINUX_DEPS: ")?.split(",")?.map { it.trim() } ?: emptyList()
+        val generateJvmDeps = output.lineSequence().find { it.contains("GENERATE_JVM_DEPS: ") }?.substringAfter("GENERATE_JVM_DEPS: ")?.split(",")?.map { it.trim() } ?: emptyList()
+        
+        assertTrue(jvmDeps.contains("generateKmpResourcesJvm"), "jvmProcessResources should depend on generateKmpResourcesJvm. Found: $jvmDeps")
+//        assertTrue(jvmDeps.contains("metadataProcessResources") || jvmDeps.contains("commonProcessResources"), "jvmProcessResources should depend on metadataProcessResources or commonProcessResources. Found: $jvmDeps")
+        
+        assertTrue(linuxDeps.contains("generateKmpResourcesLinuxX64"), "linuxX64ProcessResources should depend on generateKmpResourcesLinuxX64. Found: $linuxDeps")
+//        assertTrue(linuxDeps.contains("metadataProcessResources") || linuxDeps.contains("commonProcessResources"), "linuxX64ProcessResources should depend on metadataProcessResources or commonProcessResources. Found: $linuxDeps")
+
+        assertTrue(generateJvmDeps.contains("generateKmpResourcesMetadata"), "generateKmpResourcesJvm should depend on generateKmpResourcesMetadata. Found: $generateJvmDeps")
     }
 }

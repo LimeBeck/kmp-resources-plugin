@@ -49,13 +49,25 @@ class KmpResourcesPlugin : Plugin<Project> {
                     }
 
                     defaultSourceSet.kotlin.srcDir(task.map { it.outputDirectory })
-                    task
-                }
 
-            // Ensure tasks run before processResources
-            target.tasks.matching { it.name.contains("processResources", ignoreCase = true) }
-                .configureEach { processResourcesTask ->
-                    generationTasks.forEach { processResourcesTask.dependsOn(it) }
+                    val processResourcesTaskNames = if (ktTarget.name == "metadata")
+                        listOf("metadataCommonMainProcessResources")
+                    else
+                        listOf("${ktTarget.name}ProcessResources", "commonMainProcessResources", "metadataCommonMainProcessResources")
+
+                    processResourcesTaskNames.forEach { prTaskName ->
+                        target.tasks.matching { it.name == prTaskName }.configureEach {
+                            it.dependsOn(task)
+                        }
+                    }
+
+                    if (ktTarget.name != "metadata") {
+                        task.configure {
+                            it.dependsOn(target.tasks.matching { it.name == "generateKmpResourcesMetadata" })
+                        }
+                    }
+
+                    task
                 }
 
             if (extension.generateOnSync.get()) {

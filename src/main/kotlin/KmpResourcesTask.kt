@@ -70,7 +70,7 @@ abstract class KmpResourcesTask : DefaultTask() {
         }
 
         // Build consolidated resources for the target source set including its parents
-        val rootNode = ResourceNode("")
+        val rootNode = ResourceNode("", true)
 
         // To respect hierarchy, we should probably traverse from top (common) to bottom (specific)
         // or collect all and apply overrides.
@@ -85,16 +85,18 @@ abstract class KmpResourcesTask : DefaultTask() {
             }
         }
 
+
         sourceSetOrder.forEach { ss ->
+            val isCommon = ss == "commonMain"
             resourcesBySourceSet[ss]?.forEach { (path, file) ->
-                rootNode.addFile(path, file, overrideStrategy.get())
+                rootNode.addFile(path, file, overrideStrategy.get(), isCommon)
             }
         }
 
-        // Generate Code
-        val isCommon = targetSourceSet == "commonMain"
         val fileSpec = FileSpec.builder(packageName.get(), "Res")
 
+        // Generate Code
+        val isCommon = targetSourceSet == "commonMain"
         if (isCommon) {
             fileSpec.addType(generateResourceItemInterface())
             fileSpec.addType(generateResourceFileInterface(packageName.get()))

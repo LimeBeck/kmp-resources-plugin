@@ -26,8 +26,13 @@ fun generateNode(
         builder.addProperty(PropertySpec.builder("name", String::class, KModifier.OVERRIDE).build())
         builder.addProperty(PropertySpec.builder("items", listType, KModifier.OVERRIDE).build())
     } else {
+        val modifiers = if (node.isCommon)
+            arrayOf(KModifier.OVERRIDE, KModifier.ACTUAL)
+        else
+            arrayOf(KModifier.OVERRIDE)
+
         builder.addProperty(
-            PropertySpec.builder("name", String::class, KModifier.OVERRIDE, KModifier.ACTUAL).initializer("%S", nodeName).build()
+            PropertySpec.builder("name", String::class, *modifiers).initializer("%S", nodeName).build()
         )
 
         val itemRefs = mutableListOf<String>()
@@ -35,7 +40,7 @@ fun generateNode(
         node.files.keys.forEach { itemRefs.add(it.substringBeforeLast(".").replace(".", "_")) }
 
         builder.addProperty(
-            PropertySpec.builder("items", listType, KModifier.OVERRIDE, KModifier.ACTUAL)
+            PropertySpec.builder("items", listType, *modifiers)
                 .delegate("lazy { listOf(%L) }", itemRefs.joinToString())
                 .build()
         )
@@ -48,7 +53,9 @@ fun generateNode(
         if (isExpect) {
             subBuilder.addModifiers(KModifier.EXPECT)
         } else {
-            subBuilder.addModifiers(KModifier.ACTUAL)
+            if (childNode.isCommon) {
+                subBuilder.addModifiers(KModifier.ACTUAL)
+            }
         }
         generateNode(subBuilder, childNode, isExpect, isNative, packageName)
         builder.addType(subBuilder.build())
@@ -62,7 +69,9 @@ fun generateNode(
         if (isExpect) {
             propBuilder.addModifiers(KModifier.EXPECT)
         } else {
-            propBuilder.addModifiers(KModifier.ACTUAL)
+            if (fileInfo.isCommon) {
+                propBuilder.addModifiers(KModifier.ACTUAL)
+            }
 
             val mimeType = getMimeType(file)
             val size = file.length()
