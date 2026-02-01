@@ -97,11 +97,6 @@ abstract class KmpResourcesTask : DefaultTask() {
 
         // Generate Code
         val isCommon = targetSourceSet == "commonMain"
-        if (isCommon) {
-            fileSpec.addType(generateResourceItemInterface())
-            fileSpec.addType(generateResourceFileInterface(packageName.get()))
-            fileSpec.addType(generateResourceDirectoryInterface(packageName.get()))
-        }
 
         val resObject = if (isCommon) {
             TypeSpec.objectBuilder("Res")
@@ -111,7 +106,7 @@ abstract class KmpResourcesTask : DefaultTask() {
                 .addModifiers(KModifier.ACTUAL)
         }
 
-        generateNode(resObject, rootNode, isCommon, isNativeTarget(targetSourceSet), packageName.get())
+        generateNode(resObject, rootNode, isCommon, isNativeTarget(targetSourceSet))
 
         fileSpec.addType(resObject.build())
 

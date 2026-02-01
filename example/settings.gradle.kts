@@ -9,3 +9,10 @@ dependencyResolutionManagement {
 pluginManagement {
     includeBuild("..")
 }
+
+includeBuild("..") {
+    dependencySubstitution {
+        substitute(module("dev.limebeck.libs:kmp-resources-core"))
+            .using(project(":core"))
+    }
+}

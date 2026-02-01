@@ -86,26 +86,11 @@ class KmpResourcesPluginTest {
         val expectedCommon = """
             package dev.limebeck.res
 
-            import kotlin.ByteArray
-            import kotlin.Long
+            import dev.limebeck.kmpResources.ResourceDirectory
+            import dev.limebeck.kmpResources.ResourceFile
+            import dev.limebeck.kmpResources.ResourceItem
             import kotlin.String
             import kotlin.collections.List
-
-            public interface ResourceItem {
-              public val name: String
-            }
-
-            public interface ResourceFile : ResourceItem {
-              public val size: Long
-
-              public val type: String
-
-              public fun readBytes(): ByteArray
-            }
-
-            public interface ResourceDirectory : ResourceItem {
-              public val items: List<ResourceItem>
-            }
 
             public expect object Res : ResourceDirectory {
               override val name: String
@@ -149,6 +134,9 @@ class KmpResourcesPluginTest {
         val expectedLinux = """
             package dev.limebeck.res
 
+            import dev.limebeck.kmpResources.ResourceDirectory
+            import dev.limebeck.kmpResources.ResourceFile
+            import dev.limebeck.kmpResources.ResourceItem
             import kotlin.ByteArray
             import kotlin.Long
             import kotlin.OptIn

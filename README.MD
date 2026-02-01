@@ -11,7 +11,13 @@ Gradle plugin for providing build-time multiplatform resources for Kotlin applic
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.0.0"
-    id("dev.limebeck.kmp-resources") version "0.0.1"
+    id("dev.limebeck.kmp-resources") version "0.0.3"
+}
+
+kotlin {
+    sourceSets.commonMain.dependencies {
+        implementation("dev.limebeck:kmp-resources-core:0.0.3")
+    }
 }
 
 kmpResources {
@@ -37,26 +43,11 @@ It will generate code like this (for `src/commonMain/resources/image.png`):
 ```kotlin
 package dev.limebeck.example.res
 
-import kotlin.ByteArray
-import kotlin.Long
+import dev.limebeck.kmpResources.ResourceDirectory
+import dev.limebeck.kmpResources.ResourceFile
+import dev.limebeck.kmpResources.ResourceItem
 import kotlin.String
 import kotlin.collections.List
-
-public interface ResourceItem {
-  public val name: String
-}
-
-public interface ResourceFile : ResourceItem {
-  public val size: Long
-
-  public val type: String
-
-  public fun readBytes(): ByteArray
-}
-
-public interface ResourceDirectory : ResourceItem {
-  public val items: List<ResourceItem>
-}
 
 public expect object Res : ResourceDirectory {
   override val name: String

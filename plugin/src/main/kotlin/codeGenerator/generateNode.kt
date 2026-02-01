@@ -9,12 +9,11 @@ fun generateNode(
     builder: TypeSpec.Builder,
     node: ResourceNode,
     isExpect: Boolean,
-    isNative: Boolean,
-    packageName: String
+    isNative: Boolean
 ) {
-    val itemClassName = ClassName(packageName, "ResourceItem")
-    val fileClassName = ClassName(packageName, "ResourceFile")
-    val directoryClassName = ClassName(packageName, "ResourceDirectory")
+    val itemClassName = ClassName("dev.limebeck.kmpResources", "ResourceItem")
+    val fileClassName = ClassName("dev.limebeck.kmpResources", "ResourceFile")
+    val directoryClassName = ClassName("dev.limebeck.kmpResources", "ResourceDirectory")
 
     builder.addSuperinterface(directoryClassName)
 
@@ -57,7 +56,7 @@ fun generateNode(
                 subBuilder.addModifiers(KModifier.ACTUAL)
             }
         }
-        generateNode(subBuilder, childNode, isExpect, isNative, packageName)
+        generateNode(subBuilder, childNode, isExpect, isNative)
         builder.addType(subBuilder.build())
     }
 

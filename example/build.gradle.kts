@@ -4,6 +4,7 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -12,6 +13,7 @@ kotlin {
     linuxX64()
 
     sourceSets.commonMain.dependencies {
+        implementation("dev.limebeck.libs:kmp-resources-core:0.0.3")
         implementation(kotlin("test"))
     }
 }
