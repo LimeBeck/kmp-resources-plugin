@@ -2,6 +2,7 @@ package dev.limebeck.kmpResources.codeGenerator
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import java.io.File
 import java.util.*
 
@@ -9,7 +10,7 @@ fun generateNode(
     builder: TypeSpec.Builder,
     node: ResourceNode,
     isExpect: Boolean,
-    isNative: Boolean
+    platformType: KotlinPlatformType
 ) {
     val itemClassName = ClassName("dev.limebeck.kmpResources", "ResourceItem")
     val fileClassName = ClassName("dev.limebeck.kmpResources", "ResourceFile")
@@ -56,7 +57,7 @@ fun generateNode(
                 subBuilder.addModifiers(KModifier.ACTUAL)
             }
         }
-        generateNode(subBuilder, childNode, isExpect, isNative)
+        generateNode(subBuilder, childNode, isExpect, platformType)
         builder.addType(subBuilder.build())
     }
 
@@ -79,24 +80,13 @@ fun generateNode(
                 .addModifiers(KModifier.OVERRIDE)
                 .returns(ByteArray::class)
 
-            if (isNative) {
-                val base64 = Base64.getEncoder().encodeToString(file.readBytes())
-                readBytesFun.addAnnotation(
-                    AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
-                        .addMember("%T::class", ClassName("kotlin.io.encoding", "ExperimentalEncodingApi"))
-                        .build()
-                )
-                readBytesFun.addStatement(
-                    "return %T.Default.decode(%S)",
-                    ClassName("kotlin.io.encoding", "Base64"),
-                    base64
-                )
-            } else {
-                val resourcePath = fileInfo.path.replace(File.separatorChar, '/')
-                readBytesFun.addStatement(
-                    "return Thread.currentThread().contextClassLoader.getResourceAsStream(%S).readAllBytes()",
-                    resourcePath
-                )
+            when(platformType) {
+                KotlinPlatformType.common -> { /*Pass, not possible */ }
+                KotlinPlatformType.jvm -> getFromClasspathResources(fileInfo, readBytesFun)
+                KotlinPlatformType.js -> encodeToBase64(file, readBytesFun)
+                KotlinPlatformType.androidJvm -> getFromClasspathResources(fileInfo, readBytesFun)
+                KotlinPlatformType.native -> encodeToBase64(file, readBytesFun)
+                KotlinPlatformType.wasm -> encodeToBase64(file, readBytesFun)
             }
 
             val fileObject = TypeSpec.anonymousClassBuilder()
@@ -117,4 +107,26 @@ fun generateNode(
         }
         builder.addProperty(propBuilder.build())
     }
+}
+
+internal fun encodeToBase64(file: File, readBytesFun: FunSpec.Builder) {
+    val base64 = Base64.getEncoder().encodeToString(file.readBytes())
+    readBytesFun.addAnnotation(
+        AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+            .addMember("%T::class", ClassName("kotlin.io.encoding", "ExperimentalEncodingApi"))
+            .build()
+    )
+    readBytesFun.addStatement(
+        "return %T.Default.decode(%S)",
+        ClassName("kotlin.io.encoding", "Base64"),
+        base64
+    )
+}
+
+internal fun getFromClasspathResources(fileInfo: ResourceNode.FileInfo, readBytesFun: FunSpec.Builder) {
+    val resourcePath = fileInfo.path.replace(File.separatorChar, '/')
+    readBytesFun.addStatement(
+        "return Thread.currentThread().contextClassLoader.getResourceAsStream(%S).readAllBytes()",
+        resourcePath
+    )
 }

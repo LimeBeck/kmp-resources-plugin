@@ -30,6 +30,7 @@ class KmpResourcesPlugin : Plugin<Project> {
                         t.packageName.set(extension.packageName)
                         t.overrideStrategy.set(extension.overrideStrategy)
                         t.targetSourceSet.set(defaultSourceSet.name)
+                        t.targetPlatformType.set(ktTarget.platformType)
                         t.outputDirectory.set(target.layout.buildDirectory.dir("generated/kmpResources/${ktTarget.name}"))
 
                         val hierarchy = mutableMapOf<String, List<String>>()

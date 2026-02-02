@@ -10,6 +10,8 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.jetbrains.kotlin.gradle.internal.util.PlatformType
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import java.io.File
 
 abstract class KmpResourcesTask : DefaultTask() {
@@ -22,6 +24,9 @@ abstract class KmpResourcesTask : DefaultTask() {
 
     @get:Input
     abstract val targetSourceSet: Property<String>
+
+    @get:Input
+    abstract val targetPlatformType: Property<KotlinPlatformType>
 
     /**
      * Map of source set name to its resource directories
@@ -106,7 +111,7 @@ abstract class KmpResourcesTask : DefaultTask() {
                 .addModifiers(KModifier.ACTUAL)
         }
 
-        generateNode(resObject, rootNode, isCommon, isNativeTarget(targetSourceSet))
+        generateNode(resObject, rootNode, isCommon, targetPlatformType.get())
 
         fileSpec.addType(resObject.build())
 
